@@ -5,11 +5,11 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Database Configuration for docker
-define('DB_HOST', 'secure_coding_polytron');
+define('DB_HOST', 'localhost');
 define('DB_PORT', '3306');
 define('DB_NAME', 'db_secure_coding_polytron');
 define('DB_USER', 'root');
-define('DB_PASS', 'root');
+define('DB_PASS', '');
 
 #define('DB_HOST', 'localhost');
 #define('DB_PORT', '3306');
@@ -18,7 +18,7 @@ define('DB_PASS', 'root');
 #define('DB_PASS', 'root');
 
 // Base URL Configuration
-define('BASE_URL', 'http://localhost:8000');
+define('BASE_URL', 'http://localhost/training-secure-coding');
 
 define('SITE_NAME', 'Cybersecurity Learning Platform - Polytron');
 

@@ -24,19 +24,29 @@ try {
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = $_POST['name'] ?? '';
     $bio = $_POST['bio'] ?? '';
+
+    if (!preg_match('/[^a-zA-Z\s]/', $name)) {
+            // VULNERABLE CODE - No XSS protection
+            
+            // sanitize inputs before storing data to prevent XSS 
+            $bio = htmlspecialchars($bio, ENT_QUOTES, 'UTF-8');
+            
+            $query = "UPDATE user_profiles SET name = ?, bio = ? where user_id = $userID";
+            $stmt = $pdo->prepare($query);
+            
+            if ($stmt->execute([$name, $bio])) {
+                $message = "Profile updated successfully!";
+                // Refresh profiles
+                $result = $pdo->query("SELECT * FROM user_profiles where user_id = $userID");
+                $profiles = $result->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                $message = "Error updating profile.";
+            }
+        } else {
+            $message = "Invalid name format.";
+        }   
     
-    // VULNERABLE CODE - No XSS protection
-    $query = "UPDATE user_profiles SET name = ?, bio = ? where user_id = $userID";
-    $stmt = $pdo->prepare($query);
     
-    if ($stmt->execute([$name, $bio])) {
-        $message = "Profile updated successfully!";
-        // Refresh profiles
-        $result = $pdo->query("SELECT * FROM user_profiles where user_id = $userID");
-        $profiles = $result->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        $message = "Error updating profile.";
-    }
 }
 ?>
 

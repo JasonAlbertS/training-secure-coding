@@ -10,11 +10,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
    
-    // VULNERABLE CODE - Do not use in production!
-    $query = "SELECT * FROM users WHERE email = '$email' AND password = '" . sha1($password) . "'";
     
+    // VULNERABLE CODE - Do not use in production!
+    // $query = "SELECT * FROM users WHERE email = '$email' AND password = '" . sha1($password) . "'";
+
+    //changed to prepared statement to prevent SQL injection
+    $result = $pdo->prepare("SELECT * FROM users WHERE email = :email AND password = :password"); 
+
     try {
-        $result = $pdo->query($query);
+        // Execute the prepared statement with parameters
+        // This is a safe way to handle user input and prevents SQL injection
+        $result->execute([
+            ':email' => $email,
+            ':password' => sha1($password)
+        ]);
+
+        // $result = $pdo->query($query);
         if ($result && $result->rowCount() > 0) {
             $user = $result->fetch(PDO::FETCH_ASSOC);
             $success_message = "Login successful! Welcome, " . $user['email'];

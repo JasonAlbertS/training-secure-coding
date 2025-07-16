@@ -29,10 +29,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['file'])) {
         $file_extension = pathinfo($filename, PATHINFO_EXTENSION);
         $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
         
+        $file_tmp = $file['tmp_name'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $file_tmp);
+        finfo_close($finfo);
+        
         // Check MIME type (can be spoofed)
         $allowed_mimes = ['image/jpeg', 'image/png', 'image/gif'];
         
-        if (in_array(strtolower($file_extension), $allowed_extensions) || in_array($file['type'], $allowed_mimes)) {
+        if (in_array(strtolower($file_extension), $allowed_extensions) || in_array($mime_type, $allowed_mimes)) {
             $destination = $upload_dir . $filename;
             
             if (move_uploaded_file($file['tmp_name'], $destination)) {

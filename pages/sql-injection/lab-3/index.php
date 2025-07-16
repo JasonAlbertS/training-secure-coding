@@ -10,10 +10,18 @@ if (isset($_GET['id'])) {
     $id = $_GET['id'];
     
     // VULNERABLE CODE - URL Parameter SQL Injection
-    $query = "SELECT * FROM user_profiles WHERE id = $id";
+    // This query is vulnerable to SQL injection if the id parameter is not sanitized
+    // $query = "SELECT * FROM user_profiles WHERE id = $id";
     
+    // Prepared statement to prevent SQL injection
+    $result = $pdo->prepare("SELECT * FROM user_profiles WHERE id = :id"); 
     try {
-        $result = $pdo->query($query);
+        // $result = $pdo->query($query);
+        // Execute the prepared statement with the user-provided id
+        $result->execute([
+                    ':id' => $id
+                ]);
+
         if ($result) {
             $user_data = $result->fetch(PDO::FETCH_ASSOC);
         }

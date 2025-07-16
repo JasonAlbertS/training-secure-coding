@@ -9,14 +9,19 @@ $is_login = false;
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
-    $role = $_POST['role'] ?? 'user'; // VULNERABLE - Role can be manipulated
+    //$role = $_POST['role'] ?? 'user'; // VULNERABLE - Role can be manipulated
    
     $query = "SELECT * FROM users WHERE email = '$email' AND password = '" . sha1($password) . "'";
     try {
         $result = $pdo->query($query);
         if ($result && $result->rowCount() > 0) {
             $user = $result->fetch(PDO::FETCH_ASSOC);
-             $_SESSION['user_role'] = $role;
+             $_SESSION['user_role'] = $user['role'];
+             if($user['role'] === 'admin') {
+                 $is_admin = true;
+             }else{
+                 $is_admin = false;
+             }
              $is_login = true;
         } else {
             $message = "Invalid credentials";
@@ -81,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <input type="password" class="form-control" id="password" name="password" required>
                                     </div>
                                     
-                                    <input type="hidden" name="role" value="user">
+                                    <!-- <input type="hidden" name="role" value="user"> -->
                                     
                                     <button type="submit" class="btn btn-primary">Login</button>
                                 </form>

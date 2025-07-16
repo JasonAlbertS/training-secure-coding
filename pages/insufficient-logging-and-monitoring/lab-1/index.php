@@ -7,6 +7,16 @@ $message = '';
 $attempts = 0;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $logDirectory = 'logs/';
+    if (!is_dir($logDirectory)) {
+        mkdir($logDirectory, 0777, true); 
+    }
+    function writeToLog($message, $logFilePath) {
+        $timestamp = date('[Y-m-d H:i:s]');
+        $logEntry = $timestamp . " " . $message . PHP_EOL; 
+        file_put_contents($logFilePath, $logEntry, FILE_APPEND | LOCK_EX);
+    }
+    $logFile = $logDirectory . 'login.log';
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
     
@@ -15,14 +25,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // VULNERABLE - No logging of failed attempts
     if ($username === 'admin' && $password === 'admin123') {
         $message = "Login successful!";
-        // No successful login logging
+        writeToLog("User " . $username . " logged in successfully", $logFile);
     } else {
         $message = "Invalid credentials.";
-        // No failed login logging
+        if ($attempts > 3) {
+            writeToLog("Multiple failed login attempts detected", $logFile);
+        }else {
+            writeToLog("Failed login attempt by user " . $username, $logFile);
+            }
+        }
         // No brute force detection
         // No alerting system
     }
-}
+
 ?>
 
 <div class="container-fluid">

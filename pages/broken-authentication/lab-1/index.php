@@ -9,27 +9,49 @@ $alert_class = "alert-danger";
 $is_login = false;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
     
-    $_SESSION['login_attempts'] = $attempts + 1;
 
-    $query = "SELECT * FROM users WHERE email = '$email' AND password = '" . sha1($password) . "'";
+    $max_attempts = 5; // Set maximum attempts
+    $lock_time = 10; // lock time in seconds
 
-    try {
-        $result = $pdo->query($query);
-        if ($result && $result->rowCount() > 0) {
-            $user = $result->fetch(PDO::FETCH_ASSOC);
-            $message = "Login successful! Weak password detected: " . htmlspecialchars($password);
-            $alert_class = "alert-info";
-            $is_login = true;
-        } else {
-            $_SESSION['login_attempts'] = ($_SESSION['login_attempts'] ?? 0) + 1;
-            $message = "Invalid credentials. Attempt #" . $_SESSION['login_attempts'];
+    if  (isset($_SESSION['lock_time']) && time() < $_SESSION['lock_time']) {
+        $message = "Account locked. Please try again later.";
+        $alert_class = "alert-warning";
+        $is_login = false;
+    } else {
+        unset($_SESSION['lock_time']); // Clear lock time if not locked
+        $email = $_POST['email'] ?? '';
+        $password = $_POST['password'] ?? '';
+        if ($attempts >= $max_attempts) {
+            $message = "Maximum login attempts reached. Please try again later.";
+            $alert_class = "alert-warning";
+            $is_login = false;
+            $_SESSION['lock_time'] = time() + $lock_time; // Set lock time
+            $_SESSION['login_attempts'] = 0;
+        }else{
+            //$_SESSION['login_attempts'] = $attempts + 1;
+            $query = "SELECT * FROM users WHERE email = '$email' AND password = '" . sha1($password) . "'";
+
+            try {
+                $result = $pdo->query($query);
+                if ($result && $result->rowCount() > 0) {
+                    $user = $result->fetch(PDO::FETCH_ASSOC);
+                    $message = "Login successful! Weak password detected: " . htmlspecialchars($password);
+                    $alert_class = "alert-info";
+                    $is_login = true;
+                    $_SESSION['login_attempts'] = 0; // Reset attempts on successful login
+                } else {
+                    $_SESSION['login_attempts'] = ($_SESSION['login_attempts'] ?? 0) + 1;
+                    $message = "Invalid credentials. Attempt #" . $_SESSION['login_attempts'];
+                }
+            } catch (PDOException $e) {
+                $error_message = "Database error: " . $e->getMessage();
+            }
         }
-    } catch (PDOException $e) {
-        $error_message = "Database error: " . $e->getMessage();
     }
+    
+    
+    
 }
 ?>
 
@@ -83,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     </div>
                                     
                                     <button type="submit" class="btn btn-primary">Login</button>
+                                    
                                 </form>
                                 <?php endif; ?>
                                 <div class="mt-3">
@@ -133,5 +156,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
     </div>
 </div>
-
 <?php require_once '../../../template/footer.php'; ?>

@@ -3,8 +3,15 @@ $page_title = "Broken Access Control Lab 2 - Horizontal Privilege Escalation";
 require_once '../../../config/env.php';
 require_once '../../../template/header.php';
 
-if (isset($_GET['user_id'])) {
-    $user_id = $_GET['user_id'];
+$_SESSION['user_id'] = 1;
+$user_id = $_GET['user_id'];
+
+if(isset($_SESSION['user_id'])){
+    if ($_GET['user_id'] == $_SESSION['user_id']) {
+        $is_valid = true;
+    } else {
+        $is_valid = false;
+    }
 
 }
 
@@ -43,7 +50,9 @@ $current_user = $user_id ?? null;
                                 <h5 class="mb-0">User Profile Viewer</h5>
                             </div>
                             <div class="card-body">
-                                <p>You are currently viewing identity for User ID: <?php echo htmlspecialchars($user_id); ?></p>
+                                <?php 
+                                    if ($is_valid){ ?>
+                                    <p>You are currently viewing identity for User ID: <?php echo htmlspecialchars($user_id); ?></p>
                                 
                                 <?php if ($current_user): ?>
                                     <div class="alert alert-info" role="alert">
@@ -55,6 +64,10 @@ $current_user = $user_id ?? null;
                                         KTP not found.
                                     </div>
                                 <?php endif; ?>
+                                  <?php  }
+                                
+                                ?>
+                                
                                 
                                 <div class="mt-4">
                                     <h6>Quick Navigation:</h6>

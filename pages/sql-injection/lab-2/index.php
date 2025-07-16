@@ -7,32 +7,49 @@ $message = '';
 $login_time = '';
 $is_login = false;
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+  if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
     
     $start_time = microtime(true);
-    
-    // VULNERABLE CODE - Blind SQL Injection
-    $query = "SELECT * FROM users WHERE email = '$email' AND password = 'sha1($password)'";
-    
-    try {
-        $result = $pdo->query($query);
-        $end_time = microtime(true);
-        $login_time = number_format(($end_time - $start_time) * 1000, 2);
-        
-        if ($result && $result->rowCount() > 0) {
-            $message = "Login successful!";
-            $is_login = true; 
-        } else {
-            $message = "Invalid credentials.";
+
+    if (!empty($email)) {
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            // VULNERABLE CODE - Blind SQL Injection
+            // commanted out to prevent execution
+            //$query = "SELECT * FROM users WHERE email = '$email' AND password = 'sha1($password)'";
+            $result = $pdo->prepare("SELECT * FROM users WHERE email = :email AND password = :password"); 
+            try {
+                // $result = $pdo->query($query);
+                $result->execute([
+                    ':email' => $email,
+                    ':password' => sha1($password)
+                ]);
+                $end_time = microtime(true);
+                $login_time = number_format(($end_time - $start_time) * 1000, 2);
+                
+                if ($result && $result->rowCount() > 0) {
+                    $message = "Login successful!";
+                    $is_login = true; 
+                } else {
+                    $message = "Invalid credentials.";
+                }
+            } catch (PDOException $e) {
+                $end_time = microtime(true);
+                $login_time = number_format(($end_time - $start_time) * 1000, 2);
+                $message = "Login failed.";
         }
-    } catch (PDOException $e) {
-        $end_time = microtime(true);
-        $login_time = number_format(($end_time - $start_time) * 1000, 2);
-        $message = "Login failed.";
+        } else {
+            $end_time = microtime(true);
+            $login_time = number_format(($end_time - $start_time) * 1000, 2);
+            $message = "Email invalid.";
+        }
     }
+    
+    
 }
+
 ?>
 
 <div class="container-fluid">

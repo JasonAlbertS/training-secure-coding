@@ -11,10 +11,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     if ($domain) {
         // VULNERABLE CODE - Command injection vulnerability
-        $output =  system("nslookup $domain");
-        if ($output == null): 
-            $output = "No output returned. Please check the domain.";
-        endif;
+        // $output =  system("nslookup $domain");
+        // if ($output == null): 
+        //     $output = "No output returned. Please check the domain.";
+        // endif;
+        
+        if (preg_match('/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $domain)) {
+            $output = shell_exec("nslookup " . $domain);
+        } else {
+            $output = "Invalid domain format.";
+        }       
     }
 }
 ?>
