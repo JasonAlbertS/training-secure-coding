@@ -7,20 +7,34 @@ $message = '';
 $action = $_POST['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $logDirectory = 'logs/';
+    if (!is_dir($logDirectory)) {
+        mkdir($logDirectory, 0777, true); 
+    }
+    function writeToLog($message, $logFilePath) {
+        $timestamp = date('[Y-m-d H:i:s]');
+        $logEntry = $timestamp . " " . $message . PHP_EOL; 
+        file_put_contents($logFilePath, $logEntry, FILE_APPEND | LOCK_EX);
+    }
+    $logFile = $logDirectory . 'login.log';
     $username = $_POST['username'] ?? '';
     
     // VULNERABLE - Critical actions without proper monitoring
     switch ($action) {
         case 'delete_user':
+            writeToLog("User " . $username . " deleted successfully! (No audit log created)", $logFile);
             $message = "User deleted successfully! (No audit log created)";
             break;
         case 'change_password':
+            writeToLog("Password changed successfully! (No security log created)", $logFile);
             $message = "Password changed successfully! (No security log created)";
             break;
         case 'grant_admin':
+            writeToLog("Admin privileges granted! (No privilege escalation log))", $logFile);
             $message = "Admin privileges granted! (No privilege escalation log)";
             break;
         case 'access_sensitive':
+            writeToLog("Sensitive data accessed! (No access log created)", $logFile);
             $message = "Sensitive data accessed! (No access log created)";
             break;
         default:
